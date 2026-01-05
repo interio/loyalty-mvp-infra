@@ -15,6 +15,17 @@ This repo owns local orchestration for the stack (backend, admin UI, Postgres). 
 ```
 4) Stop services: `./dev.sh down`. Tail logs: `./dev.sh logs`.
 
+## Sample data seeding
+With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed demo data:
+```
+./seed.sh
+```
+What it does:
+- Creates one tenant, one customer, and two users (administrator + owner).
+- Adds manual adjustments + redemptions to the ledger.
+- Upserts 10 products (beer/cider SKUs).
+- Applies three invoices via the integration API (points rules run asynchronously).
+
 ## Compose summary
 - backend: builds from `../loyalty-mvp-backend/Dockerfile`, exposed on `8080`.
 - admin-ui: builds from `../loyalty-mvp-admin-ui/Dockerfile`, exposed on `3000` (uses `API_BASE_URL`).
