@@ -76,6 +76,30 @@ def main():
     customer_id = customer["id"]
     print(f"Customer: {customer['name']} -> {customer_id}")
 
+    # 2b) Points rules
+    rules_payload = {
+        "rules": [
+            {
+                "tenantId": tenant_id,
+                "ruleType": "spend",
+                "priority": 1,
+                "active": True,
+                "conditions": {"spendStep": 100, "rewardPoints": 10},
+                "effectiveFrom": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "tenantId": tenant_id,
+                "ruleType": "sku_quantity",
+                "priority": 2,
+                "active": True,
+                "conditions": {"sku": "BEER-HEINEKEN-BTL-24PK", "quantityStep": 4, "rewardPoints": 25},
+                "effectiveFrom": datetime.now(timezone.utc).isoformat(),
+            },
+        ]
+    }
+    post_json("/api/v1/rules/points/upsert", rules_payload)
+    print("Points rules inserted.")
+
     # 3) Users
     users = [
         {"email": "admin@greenbar.test", "role": "administrator", "externalId": "USR-ADMIN-001"},

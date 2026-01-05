@@ -23,6 +23,7 @@ With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed de
 What it does:
 - Creates one tenant, one customer, and two users (administrator + owner).
 - Adds manual adjustments + redemptions to the ledger.
+- Inserts sample points rules (spend + SKU quantity) for the tenant.
 - Upserts 10 products (beer/cider SKUs).
 - Applies three invoices via the integration API (points rules run asynchronously).
 
