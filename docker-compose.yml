@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ../loyalty-mvp-backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__Default: ${ConnectionStrings__Default}
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - loyalty
+
+  admin-ui:
+    build:
+      context: ../loyalty-mvp-admin-ui
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://backend:8080}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - loyalty
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-loyalty}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loyalty}
+      POSTGRES_DB: ${POSTGRES_DB:-loyalty}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - loyalty
+
+networks:
+  loyalty:
+
+volumes:
+  pgdata:
