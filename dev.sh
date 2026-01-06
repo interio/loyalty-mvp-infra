@@ -24,6 +24,7 @@ Usage: ./dev.sh [command]
 Commands:
   up           Start Postgres only (for local dotnet watch against DB)
   stack        Start backend + admin-ui + Postgres via Docker Compose
+  build        Build backend and admin-ui images (uses Docker, no local dotnet/node needed)
   watch-api    Start Postgres (Compose) and run dotnet watch for the API locally
   logs         Tail Compose logs
   down         Stop and remove Compose services
@@ -41,6 +42,10 @@ case "$CMD" in
   stack)
     ensure_env
     compose --env-file "$ENV_FILE" up -d
+    ;;
+  build)
+    ensure_env
+    compose --env-file "$ENV_FILE" build backend admin-ui
     ;;
   watch-api)
     ensure_env

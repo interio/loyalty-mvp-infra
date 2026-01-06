@@ -15,6 +15,15 @@ This repo owns local orchestration for the stack (backend, admin UI, Postgres). 
 ```
 4) Stop services: `./dev.sh down`. Tail logs: `./dev.sh logs`.
 
+## Build the stack in Docker (no local dotnet/node needed)
+If you want Docker to build both images (useful on macOS without dotnet installed):
+```
+./dev.sh down   # optional: stop existing stack
+./dev.sh build  # builds backend and admin-ui images via Docker Compose
+./dev.sh stack  # starts backend + admin-ui + Postgres
+```
+You can skip `build` if nothing changed and you just want to (re)start with existing images.
+
 ## Sample data seeding
 With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed demo data:
 ```
