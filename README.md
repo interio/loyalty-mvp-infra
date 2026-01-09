@@ -38,5 +38,5 @@ What it does:
 
 ## Compose summary
 - backend: builds from `../loyalty-mvp-backend/Dockerfile`, exposed on `8080`.
-- admin-ui: builds from `../loyalty-mvp-admin-ui/Dockerfile`, exposed on `3000` (uses `API_BASE_URL`).
+- admin-ui: builds from `../loyalty-mvp-admin-ui/Dockerfile`, exposed on `3000` (Nginx proxies `/graphql` and `/api/*` to the backend service).
 - postgres: `postgres:16`, data persisted in volume `pgdata`.
