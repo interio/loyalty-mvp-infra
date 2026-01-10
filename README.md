@@ -13,6 +13,7 @@ This repo owns local orchestration for the stack (backend, admin UI, Postgres). 
 ```
 ./dev.sh watch-api    # starts Postgres via Docker and runs dotnet watch in ../loyalty-mvp-backend
 ```
+Note: the backend needs `ConnectionStrings__Default` in the environment. If you're using `.env`, run `set -a; source .env; set +a` before `./dev.sh watch-api`.
 4) Stop services: `./dev.sh down`. Tail logs: `./dev.sh logs`.
 
 ## Build the stack in Docker (no local dotnet/node needed)
@@ -29,6 +30,7 @@ With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed de
 ```
 ./seed.sh
 ```
+Requires Python 3 available as `python3`.
 What it does:
 - Creates one tenant, one customer, and two users (administrator + owner).
 - Adds manual adjustments + redemptions to the ledger.
