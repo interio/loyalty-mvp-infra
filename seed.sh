@@ -81,6 +81,7 @@ def main():
         "rules": [
             {
                 "tenantId": tenant_id,
+                "name": "Spend 100 get 10",
                 "ruleType": "spend",
                 "priority": 1,
                 "active": True,
@@ -89,6 +90,7 @@ def main():
             },
             {
                 "tenantId": tenant_id,
+                "name": "Heineken 4 cases bonus",
                 "ruleType": "sku_quantity",
                 "priority": 2,
                 "active": True,
