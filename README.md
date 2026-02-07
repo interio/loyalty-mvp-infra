@@ -36,16 +36,17 @@ With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed de
 ./seed.sh
 ```
 Requires Python 3 available as `python3`.
+`seed.sh` expects an existing tenant (OPCO/market) and uses `SEED_TENANT_ID` (default: `0eb3173e-df9f-4604-a706-21cb97ba3530`).
 If backend is running via local `watch-api` (not Compose backend service), pass an explicit URL:
 ```
 BACKEND_URL=http://localhost:5137 ./seed.sh
 ```
 Use `http://localhost:8080` instead if you overrode `ASPNETCORE_URLS` to `8080`.
 What it does:
-- Creates one tenant, one customer, and two users (administrator + owner).
+- Uses the configured tenant (OPCO/market), creates one customer, and two users (administrator + owner).
 - Adds manual adjustments + redemptions to the ledger.
 - Inserts sample points rules (spend + SKU quantity) for the tenant.
-- Upserts 10 products (beer/cider SKUs).
+- Upserts 10 products (beer/cider SKUs) across two distributors within the tenant.
 - Applies three invoices via the integration API (points rules run asynchronously).
 
 ## Compose summary

@@ -43,19 +43,24 @@ def graphql(query: str, variables: dict):
 def main():
     print(f"Using backend: {backend}")
 
-    # 1) Tenant
-    tenant_name = "Heineken Demo Tenant"
-    t_res = graphql(
+    # 1) Tenant (OPCO / market)
+    tenant_id = os.environ.get("SEED_TENANT_ID", "0eb3173e-df9f-4604-a706-21cb97ba3530")
+    tenants_res = graphql(
         """
-        mutation CreateTenant($input: CreateTenantInput!) {
-          createTenant(input: $input) { id name }
+        query Tenants {
+          tenants { id name }
         }
         """,
-        {"input": {"name": tenant_name}},
+        {},
     )
-    tenant = t_res["createTenant"]
+    tenant = next((t for t in tenants_res["tenants"] if t["id"].lower() == tenant_id.lower()), None)
+    if tenant is None:
+        raise SystemExit(
+            f"Tenant {tenant_id} was not found. "
+            "Create this tenant first (OPCO/market), or override SEED_TENANT_ID."
+        )
     tenant_id = tenant["id"]
-    print(f"Tenant: {tenant_name} -> {tenant_id}")
+    print(f"Tenant (OPCO/Market): {tenant['name']} -> {tenant_id}")
 
     # 2) Customer
     customer_input = {
@@ -150,17 +155,20 @@ def main():
     print("Ledger seeded with manual adjustments and redemptions.")
 
     # 5) Products (10 SKUs)
+    # Distributor is separate from tenant (OPCO/market); multiple distributors can exist inside one tenant.
+    distributor_primary = "7c4e6f2e-91f4-4f9b-8f6f-3c7ab93ea001"
+    distributor_secondary = "7c4e6f2e-91f4-4f9b-8f6f-3c7ab93ea002"
     products = [
-        {"distributorId": tenant_id, "sku": "BEER-HEINEKEN-BTL-24PK", "name": "Heineken Bottle 24pk", "gtin": "000123456001", "cost": 38.50, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
-        {"distributorId": tenant_id, "sku": "BEER-HEINEKEN-KEG-50L", "name": "Heineken Keg 50L", "gtin": "000123456002", "cost": 210.00, "attributes": {"category": "beer", "package": "keg", "size": "50l"}},
-        {"distributorId": tenant_id, "sku": "BEER-HEINEKEN-DRAUGHT-30L", "name": "Heineken Draught 30L", "gtin": "000123456003", "cost": 145.00, "attributes": {"category": "beer", "package": "keg", "size": "30l"}},
-        {"distributorId": tenant_id, "sku": "BEER-HEINEKEN-BTL-12PK", "name": "Heineken Bottle 12pk", "gtin": "000123456004", "cost": 20.00, "attributes": {"category": "beer", "package": "bottle", "size": "12pk"}},
-        {"distributorId": tenant_id, "sku": "BEER-AMSTEL-BTL-24PK", "name": "Amstel Bottle 24pk", "gtin": "000123456005", "cost": 34.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
-        {"distributorId": tenant_id, "sku": "BEER-AMSTEL-KEG-50L", "name": "Amstel Keg 50L", "gtin": "000123456006", "cost": 195.00, "attributes": {"category": "beer", "package": "keg", "size": "50l"}},
-        {"distributorId": tenant_id, "sku": "CIDER-STRONGBOW-KEG-50L", "name": "Strongbow Cider Keg 50L", "gtin": "000123456007", "cost": 185.00, "attributes": {"category": "cider", "package": "keg", "size": "50l"}},
-        {"distributorId": tenant_id, "sku": "CIDER-STRONGBOW-BTL-24PK", "name": "Strongbow Cider Bottle 24pk", "gtin": "000123456008", "cost": 33.00, "attributes": {"category": "cider", "package": "bottle", "size": "24pk"}},
-        {"distributorId": tenant_id, "sku": "BEER-NEWCASTLE-BTL-24PK", "name": "Newcastle Brown Ale Bottle 24pk", "gtin": "000123456009", "cost": 36.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
-        {"distributorId": tenant_id, "sku": "BEER-REDSTRIPE-BTL-24PK", "name": "Red Stripe Bottle 24pk", "gtin": "000123456010", "cost": 35.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-HEINEKEN-BTL-24PK", "name": "Heineken Bottle 24pk", "gtin": "000123456001", "cost": 38.50, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-HEINEKEN-KEG-50L", "name": "Heineken Keg 50L", "gtin": "000123456002", "cost": 210.00, "attributes": {"category": "beer", "package": "keg", "size": "50l"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-HEINEKEN-DRAUGHT-30L", "name": "Heineken Draught 30L", "gtin": "000123456003", "cost": 145.00, "attributes": {"category": "beer", "package": "keg", "size": "30l"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-HEINEKEN-BTL-12PK", "name": "Heineken Bottle 12pk", "gtin": "000123456004", "cost": 20.00, "attributes": {"category": "beer", "package": "bottle", "size": "12pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-AMSTEL-BTL-24PK", "name": "Amstel Bottle 24pk", "gtin": "000123456005", "cost": 34.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_primary, "sku": "BEER-AMSTEL-KEG-50L", "name": "Amstel Keg 50L", "gtin": "000123456006", "cost": 195.00, "attributes": {"category": "beer", "package": "keg", "size": "50l"}},
+        {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "CIDER-STRONGBOW-KEG-50L", "name": "Strongbow Cider Keg 50L", "gtin": "000123456007", "cost": 185.00, "attributes": {"category": "cider", "package": "keg", "size": "50l"}},
+        {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "CIDER-STRONGBOW-BTL-24PK", "name": "Strongbow Cider Bottle 24pk", "gtin": "000123456008", "cost": 33.00, "attributes": {"category": "cider", "package": "bottle", "size": "24pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "BEER-NEWCASTLE-BTL-24PK", "name": "Newcastle Brown Ale Bottle 24pk", "gtin": "000123456009", "cost": 36.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
+        {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "BEER-REDSTRIPE-BTL-24PK", "name": "Red Stripe Bottle 24pk", "gtin": "000123456010", "cost": 35.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
     ]
     post_json("/api/v1/products/upsert", {"products": products})
     print("Products inserted (10 items).")
