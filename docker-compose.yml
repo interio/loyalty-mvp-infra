@@ -9,6 +9,7 @@ services:
       - .env
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8080
+      ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: ${ConnectionStrings__Default}
     depends_on:
       - postgres
