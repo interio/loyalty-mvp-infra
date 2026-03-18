@@ -5,7 +5,7 @@ This repo owns local orchestration for the stack (backend, admin UI, Postgres). 
 ## Getting started
 1) Copy `.env.example` to `.env` and adjust values if needed.
    - Required for backend: `ConnectionStrings__Default`.
-   - Compose default `API_BASE_URL=http://backend:8080` is intended for container-to-container calls.
+   - `API_BASE_URL` is used by `seed.sh` as a fallback backend URL. For host-run scripts, prefer `BACKEND_URL=http://localhost:8080`.
    - Optional for backend CORS: `ALLOWED_ORIGINS` (comma-separated origins or `*`).
 2) Bring up dependencies:
 ```
@@ -33,11 +33,11 @@ You can skip `build` if nothing changed and you just want to (re)start with exis
 ## Sample data seeding
 With the backend running (via `./dev.sh stack` or `./dev.sh watch-api`), seed demo data:
 ```
-./seed.sh
+BACKEND_URL=http://localhost:8080 ./seed.sh
 ```
 Requires Python 3 available as `python3`.
 `seed.sh` expects an existing tenant (OPCO/market) and uses `SEED_TENANT_ID` (default: `0eb3173e-df9f-4604-a706-21cb97ba3530`).
-If backend is running via local `watch-api` (not Compose backend service), pass an explicit URL:
+If backend is running via local `watch-api` (default launch profile `5137`), pass an explicit URL:
 ```
 BACKEND_URL=http://localhost:5137 ./seed.sh
 ```
