@@ -21,6 +21,32 @@ Note:
 - `dotnet watch` uses backend launch settings by default (`http://localhost:5137`). To run local watch mode on `8080`, set `ASPNETCORE_URLS=http://localhost:8080` before `./dev.sh watch-api`.
 4) Stop services: `./dev.sh down`. Tail logs: `./dev.sh logs`.
 
+## Running backend/admin commands in containers
+When you want to run `dotnet`/`npm` without local SDK installs, run them in containers attached to the infra network.
+
+Backend migrations example (run from parent folder that contains all three repos):
+```
+cd ..
+docker run --rm \
+  --network=loyalty-mvp-infra_loyalty \
+  --env-file loyalty-mvp-infra/.env \
+  -e ConnectionStrings__Default="Host=postgres;Port=5432;Database=loyalty;Username=loyalty;Password=loyalty" \
+  -v "$(pwd)/loyalty-mvp-backend:/src" \
+  -w /src \
+  mcr.microsoft.com/dotnet/sdk:8.0 \
+  sh -lc "dotnet restore LoyaltyMvp.sln && dotnet tool install --tool-path /tmp/dotnet-tools dotnet-ef && /tmp/dotnet-tools/dotnet-ef database update --context IntegrationDbContext --project src/api --startup-project src/api"
+```
+
+Admin UI build example:
+```
+cd ..
+docker run --rm \
+  -v "$(pwd)/loyalty-mvp-admin-ui:/src" \
+  -w /src \
+  node:20-alpine \
+  sh -lc "npm install && npm run build"
+```
+
 ## Build the stack in Docker (no local dotnet/node needed)
 If you want Docker to build both images (useful on macOS without dotnet installed):
 ```
