@@ -83,7 +83,7 @@ BACKEND_URL=http://localhost:5137 ./seed.sh
 ```
 Use `http://localhost:8080` instead if you overrode `ASPNETCORE_URLS` to `8080`.
 What it does:
-- Uses the configured tenant (OPCO/market), creates one customer, and two users (administrator + owner).
+- Uses the configured tenant (OPCO/market), creates (or finds) one customer via REST (`POST /api/v1/customers`) and updates full customer profile via REST (`PUT /api/v1/customers/{customerId}`), then creates two users (administrator + owner).
 - Adds manual adjustments + redemptions to the ledger.
 - Inserts sample points rules (spend + SKU quantity) for the tenant. New rules are created inactive by backend policy; activate them in UI/API before expecting invoice-based points awards.
 - Upserts 10 products (beer/cider SKUs) across two distributors within the tenant.

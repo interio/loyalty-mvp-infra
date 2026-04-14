@@ -17,10 +17,10 @@ from datetime import datetime, timedelta, timezone
 
 backend = os.environ.get("BACKEND_URL", "http://localhost:8080").rstrip("/")
 
-def post_json(path: str, payload: dict, expect_graphql: bool = False):
+def request_json(path: str, payload: dict, method: str = "POST", expect_graphql: bool = False):
     url = f"{backend}{path}"
     body = json.dumps(payload).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method=method)
     try:
         with urllib.request.urlopen(req) as resp:
             data = resp.read()
@@ -38,7 +38,7 @@ def post_json(path: str, payload: dict, expect_graphql: bool = False):
 
 def graphql(query: str, variables: dict):
     payload = {"query": query, "variables": variables}
-    return post_json("/graphql", payload, expect_graphql=True)
+    return request_json("/graphql", payload, expect_graphql=True)
 
 def main():
     print(f"Using backend: {backend}")
@@ -62,24 +62,58 @@ def main():
     tenant_id = tenant["id"]
     print(f"Tenant (OPCO/Market): {tenant['name']} -> {tenant_id}")
 
-    # 2) Customer
-    customer_input = {
+    # 2) Customer via REST API (create + update profile)
+    customer_external_id = "CUST-HEI-001"
+    found_customers = graphql(
+        """
+        query CustomersByTenantSearch($tenantId: UUID!, $search: String!) {
+          customersByTenantSearch(tenantId: $tenantId, search: $search) { id name externalId }
+        }
+        """,
+        {"tenantId": tenant_id, "search": customer_external_id},
+    )["customersByTenantSearch"]
+    existing_customer = next(
+        (c for c in found_customers if (c.get("externalId") or "").lower() == customer_external_id.lower()),
+        None,
+    )
+
+    customer_create_payload = {
         "tenantId": tenant_id,
         "name": "Green Bar & Grill",
         "contactEmail": "contact@greenbar.test",
-        "externalId": "CUST-HEI-001",
+        "externalId": customer_external_id,
+        "tier": "bronze",
+        "status": 1,
     }
-    c_res = graphql(
-        """
-        mutation CreateCustomer($input: CreateCustomerInput!) {
-          createCustomer(input: $input) { id name tenantId externalId }
-        }
-        """,
-        {"input": customer_input},
-    )
-    customer = c_res["createCustomer"]
+
+    if existing_customer is None:
+        customer = request_json("/api/v1/customers", customer_create_payload, method="POST")
+        print(f"Customer created via REST: {customer['name']} -> {customer['id']}")
+    else:
+        customer = existing_customer
+        print(f"Customer already exists, will update via REST: {customer['name']} -> {customer['id']}")
+
     customer_id = customer["id"]
-    print(f"Customer: {customer['name']} -> {customer_id}")
+    customer_input = {
+        "tenantId": tenant_id,
+        "name": "Green Bar & Grill",
+        "contactEmail": "ops@greenbar.test",
+        "externalId": customer_external_id,
+        "tier": "silver",
+        "address": {
+            "address": "Main Street 10",
+            "countryCode": "PL",
+            "postalCode": "00-001",
+            "region": "Mazowieckie",
+        },
+        "phoneNumber": "+48 555 123 456",
+        "type": "bar",
+        "businessSegment": "on-trade",
+        "onboardDate": datetime(2026, 4, 1, tzinfo=timezone.utc).isoformat(),
+        "status": 1,
+    }
+    customer = request_json(f"/api/v1/customers/{customer_id}", customer_input, method="PUT")
+    print(f"Customer profile updated via REST: {customer['name']} (status={customer['status']}, tier={customer['tier']})")
 
     # 2b) Points rules
     rules_payload = {
@@ -104,7 +138,7 @@ def main():
             },
         ]
     }
-    post_json("/api/v1/rules/points/upsert", rules_payload)
+    request_json("/api/v1/rules/points/upsert", rules_payload)
     print("Points rules inserted.")
 
     # 3) Users
@@ -170,7 +204,7 @@ def main():
         {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "BEER-NEWCASTLE-BTL-24PK", "name": "Newcastle Brown Ale Bottle 24pk", "gtin": "000123456009", "cost": 36.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
         {"tenantId": tenant_id, "distributorId": distributor_secondary, "sku": "BEER-REDSTRIPE-BTL-24PK", "name": "Red Stripe Bottle 24pk", "gtin": "000123456010", "cost": 35.00, "attributes": {"category": "beer", "package": "bottle", "size": "24pk"}},
     ]
-    post_json("/api/v1/products/upsert", {"products": products})
+    request_json("/api/v1/products/upsert", {"products": products})
     print("Products inserted (10 items).")
 
     # 6) Invoices (several, using external customer id + actor email)
@@ -216,7 +250,7 @@ def main():
             "tenantId": tenant_id,
             **inv,
         }
-        res = post_json("/api/v1/integration/invoices/apply", payload)
+        res = request_json("/api/v1/integration/invoices/apply", payload)
         corr = res.get("correlationId", inv["invoiceId"])
         print(f"Invoice {inv['invoiceId']} accepted (correlation {corr}).")
 
